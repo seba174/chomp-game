@@ -52,6 +52,18 @@ namespace Chomp
             var maxHeight = (int)maxHeightControl.Value;
             var gamesCount = (int)gamesCountControl.Value;
 
+            if (minWidth > maxWidth)
+            {
+                MessageBox.Show($"Minimalna szerokość nie może być większa niż maksymalna szerokość");
+                return;
+            }
+
+            if (minHeight > maxHeight)
+            {
+                MessageBox.Show($"Minimalna wysokość nie może być większa niż maksymalna wysokość");
+                return;
+            }
+
             if (minWidth < minDimension || minHeight < minDimension)
             {
                 MessageBox.Show($"Minimalna szerokość i wysokość planszy to {minDimension}");
