@@ -181,10 +181,26 @@ namespace Chomp
                 }
                 else
                 {
-                    var lastMoveOfSecondPlayer = _board.MovesList.Last();
                     if (_board.Width == 2)
                     {
-                        _board.MakeMove(1, _board.Height - 1);
+                        var leftRowLastBottom = _board.ChoosenFields.Where(a => a.x == 0).DefaultIfEmpty((x: 0, y: _board.Height)).Min(a => a.y);
+                        var rightRowLastBottom = _board.ChoosenFields.Where(a => a.x == 1).DefaultIfEmpty((x: 0, y: _board.Height)).Min(a => a.y);
+
+                        if (rightRowLastBottom == leftRowLastBottom)
+                        {
+                            _board.MakeMove(1, rightRowLastBottom - 1);
+                        }
+
+                        if (leftRowLastBottom < rightRowLastBottom)
+                        {
+                            _board.MakeMove(1, leftRowLastBottom - 1);
+                        }
+
+                        if (leftRowLastBottom > rightRowLastBottom)
+                        {
+                            _board.MakeMove(0, rightRowLastBottom + 1);
+                        }
+                        return;
                     }
                     else
                     {
@@ -194,24 +210,19 @@ namespace Chomp
                         if (bottomRowLastLeft == topRowLastLeft)
                         {
                             _board.MakeMove(bottomRowLastLeft - 1, 1);
-                            return;
                         }
 
                         if (topRowLastLeft < bottomRowLastLeft)
                         {
                             _board.MakeMove(topRowLastLeft - 1, 1);
-                            return;
                         }
 
                         if (topRowLastLeft > bottomRowLastLeft)
                         {
                             _board.MakeMove(bottomRowLastLeft + 1, 0);
-                            return;
                         }
-
-                        _board.MakeMove(_board.Width - 1, 1);
+                        return;
                     }
-                    return;
                 }
             }
 
