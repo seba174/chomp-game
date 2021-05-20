@@ -165,11 +165,54 @@ namespace Chomp
 
             }
 
-            // TODO proper implementation
             private void Make_TwoN_Move()
             {
-                // for now same as N x M move
-                Make_NM_Move();
+                if (_board.MovesList.Count == 0)
+                {
+                    if (_board.Width == 2)
+                    {
+                        _board.MakeMove(1, _board.Height - 1);
+                    }
+                    else
+                    {
+                        _board.MakeMove(_board.Width - 1, 1);
+                    }
+                    return;
+                }
+                else
+                {
+                    var lastMoveOfSecondPlayer = _board.MovesList.Last();
+                    if (_board.Width == 2)
+                    {
+                        _board.MakeMove(1, _board.Height - 1);
+                    }
+                    else
+                    {
+                        var topRowLastLeft = _board.ChoosenFields.Where(a => a.y == 0).DefaultIfEmpty((x: _board.Width, y: 0)).Min(a => a.x);
+                        var bottomRowLastLeft = _board.ChoosenFields.Where(a => a.y == 1).DefaultIfEmpty((x: _board.Width, y: 0)).Min(a => a.x);
+
+                        if (bottomRowLastLeft == topRowLastLeft)
+                        {
+                            _board.MakeMove(bottomRowLastLeft - 1, 1);
+                            return;
+                        }
+
+                        if (topRowLastLeft < bottomRowLastLeft)
+                        {
+                            _board.MakeMove(topRowLastLeft - 1, 1);
+                            return;
+                        }
+
+                        if (topRowLastLeft > bottomRowLastLeft)
+                        {
+                            _board.MakeMove(bottomRowLastLeft + 1, 0);
+                            return;
+                        }
+
+                        _board.MakeMove(_board.Width - 1, 1);
+                    }
+                    return;
+                }
             }
 
             private Strategy GetStrategy()
