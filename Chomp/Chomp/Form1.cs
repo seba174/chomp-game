@@ -185,6 +185,7 @@ namespace Chomp
         public Form1(int width, int height)
         {
             InitializeComponent();
+            closeButton.Visible = false;
 
             board = new Board
             {
@@ -207,6 +208,7 @@ namespace Chomp
                 var winner = game.MoveOfFirstPlayer.Value ? 2 : 1;
                 button1.Enabled = false;
                 label1.Text = $"Wygrał gracz: {winner}";
+                closeButton.Visible = true;
             }
         }
 
@@ -261,6 +263,11 @@ namespace Chomp
             {
                 label1.Text = "Ruch gracza: 2";
             }
+        }
+
+        private void closeButton_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }
