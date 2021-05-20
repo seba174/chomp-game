@@ -82,7 +82,6 @@ namespace Chomp
             // numericUpDown2
             // 
             this.numericUpDown2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.numericUpDown2.Enabled = false;
             this.numericUpDown2.Location = new System.Drawing.Point(190, 37);
             this.numericUpDown2.Name = "numericUpDown2";
             this.numericUpDown2.Size = new System.Drawing.Size(181, 23);

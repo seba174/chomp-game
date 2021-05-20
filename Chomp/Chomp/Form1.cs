@@ -88,7 +88,6 @@ namespace Chomp
             {
                 _board = board;
                 strategy = GetStrategy();
-
             }
 
             public void MakeMove()
@@ -111,6 +110,12 @@ namespace Chomp
                     case Strategy.NN:
                         Make_NN_Move();
                         break;
+                    case Strategy.TwoN:
+                        Make_TwoN_Move();
+                        break;
+                    case Strategy.NM:
+                        Make_NM_Move();
+                        break;
                 }
             }
 
@@ -127,6 +132,7 @@ namespace Chomp
                 }
             }
 
+            // TODO proper implementation
             private void Make_NM_Move()
             {
                 // for now random move
@@ -157,6 +163,13 @@ namespace Chomp
 
                 _board.MakeMove(choosenMove.x, choosenMove.y);
 
+            }
+
+            // TODO proper implementation
+            private void Make_TwoN_Move()
+            {
+                // for now same as N x M move
+                Make_NM_Move();
             }
 
             private Strategy GetStrategy()

@@ -21,13 +21,6 @@ namespace Chomp
             minHeightControl.Value = 10;
             maxHeightControl.Value = 10;
             gamesCountControl.Value = 10;
-
-            numericUpDown1.ValueChanged += NumericUpDown1_ValueChanged;
-        }
-
-        private void NumericUpDown1_ValueChanged(object sender, EventArgs e)
-        {
-            numericUpDown2.Value = numericUpDown1.Value;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -46,8 +39,6 @@ namespace Chomp
                 MessageBox.Show($"Maksymalna szerokość i wysokość planszy to {maxDimension}");
                 return;
             }
-
-            // Close();
 
             var game = new Form1(width, height);
             game.Show();
