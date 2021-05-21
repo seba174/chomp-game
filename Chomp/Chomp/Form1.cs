@@ -28,13 +28,32 @@ namespace Chomp
                 MarkFieldsAsChoosen(x, y);
             }
 
+            public Board MakeNextMove((int x, int y) move)
+            {
+                var newBoard = new Board()
+                {
+                    Width = this.Width,
+                    Height = this.Height,
+                    MovesList = new List<(int x, int y)>(this.MovesList),
+                    ChoosenFields = new HashSet<(int x, int y)>((this.ChoosenFields))
+                };
+                newBoard.MovesList.Add((move.x, move.y));
+                MarkFieldsAsChoosen(newBoard.ChoosenFields, move.x, move.y);
+                return newBoard;
+            }
+
             private void MarkFieldsAsChoosen(int x, int y)
+            {
+                MarkFieldsAsChoosen(this.ChoosenFields, x, y);
+            }
+
+            private void MarkFieldsAsChoosen(HashSet<(int x, int y)> choosenFields, int x, int y)
             {
                 for (int i = x; i < Width; i++)
                 {
                     for (int j = y; j < Height; j++)
                     {
-                        ChoosenFields.Add((i, j));
+                        choosenFields.Add((i, j));
                     }
                 }
             }
@@ -42,6 +61,35 @@ namespace Chomp
             public bool IsEndOfTheGame()
             {
                 return ChoosenFields.Count == (Width * Height - 1);
+            }
+
+            public bool IsMoveOfFirstPlayer()
+            {
+                return MovesList.Count % 2 == 0;
+            }
+
+            public IEnumerable<(int x, int y)> GetAllPossibleMoves()
+            {
+                HashSet<(int x, int y)> allPossibbleMoves = new HashSet<(int, int)>();
+
+                for (int i = 0; i < Width; i++)
+                {
+                    for (int j = 0; j < Height; j++)
+                    {
+                        if (i == 0 && j == 0)
+                        {
+                            continue;
+                        }
+                        allPossibbleMoves.Add((i, j));
+                    }
+                }
+
+                foreach (var pair in ChoosenFields)
+                {
+                    allPossibbleMoves.Remove(pair);
+                }
+
+                return allPossibbleMoves;
             }
         }
 
@@ -51,6 +99,10 @@ namespace Chomp
             private Player _player1;
             private Player _player2;
 
+            public Player GetPlayerTurn() 
+            {
+                return MoveOfFirstPlayer.HasValue ? MoveOfFirstPlayer.Value ? _player1 : _player2 : null;
+            }
 
             public bool? MoveOfFirstPlayer { get; set; }
 
@@ -80,14 +132,15 @@ namespace Chomp
         public class Player
         {
             private Board _board;
+            private AlphaBeta _alphaBeta;
             private readonly Strategy strategy;
             private bool? amIFirstPlayer;
-
 
             public Player(Board board)
             {
                 _board = board;
                 strategy = GetStrategy();
+                _alphaBeta = new AlphaBeta(3, SimpleEvaluator.Evaluate);
             }
 
             public void MakeMove()
@@ -136,33 +189,160 @@ namespace Chomp
             private void Make_NM_Move()
             {
                 // for now random move
-
-                HashSet<(int x, int y)> allPossibbleMoves = new HashSet<(int, int)>();
-
-                for (int i = 0; i < _board.Width; i++)
-                {
-                    for (int j = 0; j < _board.Height; j++)
-                    {
-                        if (i == 0 && j == 0)
-                        {
-                            continue;
-                        }
-                        allPossibbleMoves.Add((i, j));
-                    }
-                }
-
-                foreach (var pair in _board.ChoosenFields)
-                {
-                    allPossibbleMoves.Remove(pair);
-                }
-
+                var allPossibbleMoves = _board.GetAllPossibleMoves();
+                //var allPossibbleMoves = _alphaBeta.GetBestMoves(_board, amIFirstPlayer.Value);
 
                 var random = new Random();
-                var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count - 1);
+                var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
                 var choosenMove = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
 
                 _board.MakeMove(choosenMove.x, choosenMove.y);
 
+            }
+
+            private class SimpleEvaluator
+            {
+                public static double Evaluate(Board board)
+                {
+                    var possibleMoves = board.GetAllPossibleMoves();
+                    if (possibleMoves.Any())
+                    {
+                        return double.MaxValue;
+                    }
+                    int goodMoves = 0;
+                    foreach (var move in possibleMoves)
+                    {
+                        var newBoard = board.MakeNextMove(move);
+                        if (!IsBadPosition(board))
+                        {
+                            goodMoves++;
+                        }
+                    }
+                    return goodMoves;
+                }
+
+                private static bool IsBadPosition(Board board)
+                {
+                    return board.ChoosenFields.Count() % 2 == 1;
+                }
+            }
+
+            private class AlphaBeta
+            {
+                private int _max_depth { get; set; }
+                private Func<Board, double> _evaluation { get; set; }
+                private double _eps { get; set; }
+
+                public AlphaBeta(int max_depth, Func<Board, double> evaluation, double eps = 0)
+                {
+                    this._max_depth = max_depth;
+                    this._evaluation = evaluation;
+                    this._eps = eps;
+                }
+
+                public IEnumerable<(int x, int y)> GetBestMoves(Board board, bool is_first_player)
+                {
+                    var allPossibbleMoves = board.GetAllPossibleMoves();
+
+                    double alpha = double.MinValue; 
+                    double beta = double.MaxValue;
+
+                    var moves = new List<((int x, int y), double)>();
+
+                    foreach (var move in allPossibbleMoves)
+                    {
+                        var value = eval_move(board, move, _max_depth, ref alpha, ref beta, is_first_step: true, is_first_player);
+                        moves.Add((move, value));
+                        alpha = Math.Max(alpha, value);
+                    }
+
+                    var bestMoves = moves.Where(x => x.Item2 == alpha).Select(x => x.Item1).ToList();
+                    return bestMoves.Any() ? bestMoves : allPossibbleMoves;
+                }
+
+                private double eval_move(Board board, (int x, int y) move, int depth, ref double alpha, ref double beta, bool is_first_step, bool is_first_player)
+                {
+                    var newBoard = board.MakeNextMove(move);
+                    return alpha_beta(newBoard, depth - 1, ref alpha, ref beta, is_first_step, is_first_player);
+                }
+
+                private double alpha_beta(Board board, int depth, ref double alpha, ref double beta, bool is_first_step, bool is_first_player)
+                {
+                    var is_maximizing = board.IsMoveOfFirstPlayer() == is_first_player;
+                    var posible_moves = board.GetAllPossibleMoves();
+                    var is_game_over = board.IsEndOfTheGame();
+
+                    if (is_game_over || depth == 0)
+                    {
+                        var value = _evaluation(board);
+                        if (!is_maximizing)
+                        {
+                            value *= -1;
+                        }
+                        return value;
+                    }
+
+                    if (is_maximizing)
+                    {
+                        var value = double.MinValue;
+                        foreach (var move in posible_moves)
+                        {
+                            value = Math.Max(value, eval_move(board, move, depth, ref alpha, ref beta, is_first_step, is_first_player));
+                            alpha = Math.Max(alpha, value);
+                            if (should_cut(alpha, beta, _eps, is_first_step))
+                            {
+                                break;
+                            }
+                        }
+                        return value;
+                    }
+                    else
+                    {
+                        var value = double.MaxValue;
+                        foreach (var move in posible_moves)
+                        {
+                            value = Math.Min(value, eval_move(board, move, depth, ref alpha, ref beta, is_first_step, is_first_player));
+                            beta = Math.Min(beta, value);
+                            if (should_cut(alpha, beta, _eps, is_first_step))
+                            {
+                                break;
+                            }
+                        }
+                        return value;
+                    }
+                }
+
+                private bool should_cut(double alpha, double beta, double eps, bool is_first_step)
+                {
+                    return false;
+                    if (is_first_step)
+                    {
+                        if (compare(alpha, beta, eps) > 0)
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if (alpha >= beta)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                private int compare(double alpha, double beta, double eps)
+                {
+                    if (Math.Abs(alpha - beta) <= eps)
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return alpha < beta ? -1 : 1;
+                    }
+                }
             }
 
             private void Make_TwoN_Move()
