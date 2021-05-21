@@ -28,6 +28,11 @@ namespace Chomp
                 MarkFieldsAsChoosen(x, y);
             }
 
+            public bool IsAvailableMove(int x, int y)
+            {
+                return !ChoosenFields.Contains((x, y));
+            }
+
             public Board MakeNextMove((int x, int y) move)
             {
                 var newBoard = new Board()
@@ -106,11 +111,11 @@ namespace Chomp
 
             public bool? MoveOfFirstPlayer { get; set; }
 
-            public Game(Board board)
+            public Game(Board board, Strategy? strategy1, Strategy? strategy2)
             {
                 _board = board;
-                _player1 = new Player(_board);
-                _player2 = new Player(_board);
+                _player1 = new Player(_board, strategy1);
+                _player2 = new Player(_board, strategy2);
             }
 
 
@@ -136,10 +141,10 @@ namespace Chomp
             private readonly Strategy strategy;
             private bool? amIFirstPlayer;
 
-            public Player(Board board)
+            public Player(Board board, Strategy? forcedStrategy)
             {
                 _board = board;
-                strategy = GetStrategy();
+                strategy = forcedStrategy == null ? GetStrategy() : (Strategy)forcedStrategy;
                 _alphaBeta = new AlphaBeta(3, SimpleEvaluator.Evaluate);
             }
 
@@ -151,11 +156,11 @@ namespace Chomp
                 }
 
                 // second player hasnt winning strategy, so always same move
-                if (!amIFirstPlayer.Value)
-                {
-                    Make_NM_Move();
-                    return;
-                }
+                //if (!amIFirstPlayer.Value)
+                //{
+                //    Make_NM_Move();
+                //    return;
+                //}
 
                 // first player strategies
                 switch (strategy)
@@ -169,19 +174,26 @@ namespace Chomp
                     case Strategy.NM:
                         Make_NM_Move();
                         break;
+                    case Strategy.Random:
+                        Make_Random_Move();
+                        break;
                 }
             }
 
             private void Make_NN_Move()
             {
-                if (_board.MovesList.Count == 0)
+                //if (_board.MovesList.Count == 0)
+                if (_board.IsAvailableMove(1,1))
                 {
                     _board.MakeMove(1, 1);
                 }
                 else
                 {
                     var lastMoveOfSecondPlayer = _board.MovesList.Last();
-                    _board.MakeMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x);
+                    if (_board.IsAvailableMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x))
+                        _board.MakeMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x);
+                    else
+                        Make_Random_Move();
                 }
             }
 
@@ -189,8 +201,20 @@ namespace Chomp
             private void Make_NM_Move()
             {
                 // for now random move
+                //var allPossibbleMoves = _board.GetAllPossibleMoves();
+                var allPossibbleMoves = _alphaBeta.GetBestMoves(_board, amIFirstPlayer.Value);
+
+                var random = new Random();
+                var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
+                var choosenMove = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
+
+                _board.MakeMove(choosenMove.x, choosenMove.y);
+
+            }
+
+            private void Make_Random_Move()
+            {
                 var allPossibbleMoves = _board.GetAllPossibleMoves();
-                //var allPossibbleMoves = _alphaBeta.GetBestMoves(_board, amIFirstPlayer.Value);
 
                 var random = new Random();
                 var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
@@ -205,7 +229,7 @@ namespace Chomp
                 public static double Evaluate(Board board)
                 {
                     var possibleMoves = board.GetAllPossibleMoves();
-                    if (possibleMoves.Any())
+                    if (!possibleMoves.Any())
                     {
                         return double.MaxValue;
                     }
@@ -347,16 +371,26 @@ namespace Chomp
 
             private void Make_TwoN_Move()
             {
-                if (_board.MovesList.Count == 0)
+                //if (_board.MovesList.Count == 0)
+                //{
+                //    if (_board.Width == 2)
+                //    {
+                //        _board.MakeMove(1, _board.Height - 1);
+                //    }
+                //    else
+                //    {
+                //        _board.MakeMove(_board.Width - 1, 1);
+                //    }
+                //    return;
+                //}
+                if (_board.Width == 2 && _board.IsAvailableMove(1, _board.Height - 1))
                 {
-                    if (_board.Width == 2)
-                    {
-                        _board.MakeMove(1, _board.Height - 1);
-                    }
-                    else
-                    {
-                        _board.MakeMove(_board.Width - 1, 1);
-                    }
+                    _board.MakeMove(1, _board.Height - 1);
+                    return;
+                }
+                else if (_board.Height == 2 && _board.IsAvailableMove(_board.Width - 1, 1))
+                {
+                    _board.MakeMove(_board.Width - 1, 1);
                     return;
                 }
                 else
@@ -368,17 +402,26 @@ namespace Chomp
 
                         if (rightRowLastBottom == leftRowLastBottom)
                         {
-                            _board.MakeMove(1, rightRowLastBottom - 1);
+                            if (_board.IsAvailableMove(1, rightRowLastBottom - 1))
+                                _board.MakeMove(1, rightRowLastBottom - 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (leftRowLastBottom < rightRowLastBottom)
                         {
-                            _board.MakeMove(1, leftRowLastBottom - 1);
+                            if (_board.IsAvailableMove(1, leftRowLastBottom - 1))
+                                _board.MakeMove(1, leftRowLastBottom - 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (leftRowLastBottom > rightRowLastBottom)
                         {
-                            _board.MakeMove(0, rightRowLastBottom + 1);
+                            if (_board.IsAvailableMove(0, rightRowLastBottom + 1))
+                                _board.MakeMove(0, rightRowLastBottom + 1);
+                            else
+                                Make_Random_Move();
                         }
                         return;
                     }
@@ -389,17 +432,26 @@ namespace Chomp
 
                         if (bottomRowLastLeft == topRowLastLeft)
                         {
-                            _board.MakeMove(bottomRowLastLeft - 1, 1);
+                            if (_board.IsAvailableMove(bottomRowLastLeft - 1, 1))
+                                _board.MakeMove(bottomRowLastLeft - 1, 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (topRowLastLeft < bottomRowLastLeft)
                         {
-                            _board.MakeMove(topRowLastLeft - 1, 1);
+                            if (_board.IsAvailableMove(topRowLastLeft - 1, 1))
+                                _board.MakeMove(topRowLastLeft - 1, 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (topRowLastLeft > bottomRowLastLeft)
                         {
-                            _board.MakeMove(bottomRowLastLeft + 1, 0);
+                            if (_board.IsAvailableMove(bottomRowLastLeft + 1, 0))
+                                _board.MakeMove(bottomRowLastLeft + 1, 0);
+                            else
+                                Make_Random_Move();
                         }
                         return;
                     }
@@ -426,20 +478,29 @@ namespace Chomp
         {
             TwoN,
             NN,
-            NM
+            NM,
+            Random
         }
 
-        public Form1(int width, int height)
+        public Form1(int width, int height, string strategy1, string strategy2)
         {
             InitializeComponent();
             closeButton.Visible = false;
+
+            Strategy? str_1 = null;
+            Strategy? str_2 = null;
+
+            if (strategy1 == "losowa")
+                str_1 = Strategy.Random;
+            if (strategy2 == "losowa")
+                str_2 = Strategy.Random;
 
             board = new Board
             {
                 Width = width,
                 Height = height
             };
-            game = new Game(board);
+            game = new Game(board, str_1,  str_2);
 
             UpdateBoard();
             UpdateLabel();
