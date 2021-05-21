@@ -30,6 +30,8 @@ namespace Chomp
 
             public bool IsAvailableMove(int x, int y)
             {
+                if (x >= Width || y >= Height)
+                    return false;
                 return !ChoosenFields.Contains((x, y));
             }
 
