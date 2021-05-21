@@ -6,12 +6,17 @@ namespace Chomp
     public partial class Settings : Form
     {
         private const int minDimension = 2;
-        private const int maxDimension = 50;
-        private const int maxGames = 100;
+        private const int maxDimension = 100;
+        private const int maxGames = 100000;
 
         public Settings()
         {
             InitializeComponent();
+
+            strategy_demo_1.SelectedIndex = 0;
+            strategy_demo_2.SelectedIndex = 0;
+            strategy_test_1.SelectedIndex = 0;
+            strategy_test_2.SelectedIndex = 0;
 
             numericUpDown1.Value = 10;
             numericUpDown2.Value = 10;
@@ -27,6 +32,8 @@ namespace Chomp
         {
             var width = (int)numericUpDown1.Value;
             var height = (int)numericUpDown2.Value;
+            var str_1 = (string)strategy_demo_1.SelectedItem;
+            var str_2 = (string)strategy_demo_2.SelectedItem;
 
             if (width < minDimension || height < minDimension)
             {
@@ -40,7 +47,7 @@ namespace Chomp
                 return;
             }
 
-            var game = new Form1(width, height);
+            var game = new Form1(width, height, str_1, str_2);
             game.Show();
         }
 
@@ -51,6 +58,8 @@ namespace Chomp
             var minHeight = (int)minHeightControl.Value;
             var maxHeight = (int)maxHeightControl.Value;
             var gamesCount = (int)gamesCountControl.Value;
+            var str_1 = (string)strategy_test_1.SelectedItem;
+            var str_2 = (string)strategy_test_2.SelectedItem;
 
             if (minWidth > maxWidth)
             {
@@ -81,8 +90,13 @@ namespace Chomp
                 MessageBox.Show($"Liczba gier powinna być z przedziału [1, {maxGames}]");
             }
 
-            var game = new TestGames(minWidth, maxWidth, minHeight, maxHeight, gamesCount);
+            var game = new TestGames(minWidth, maxWidth, minHeight, maxHeight, gamesCount, str_1, str_2);
             game.Show();
+        }
+
+        private void tableLayoutPanel4_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

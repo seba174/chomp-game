@@ -13,8 +13,10 @@ namespace Chomp
         private readonly int minHeight;
         private readonly int maxHeight;
         private readonly int gamesCount;
+        private  Strategy? strategy1 = null;
+        private  Strategy? strategy2 = null;
 
-        public TestGames(int minWidth, int maxWidth, int minHeight, int maxHeight, int gamesCount)
+        public TestGames(int minWidth, int maxWidth, int minHeight, int maxHeight, int gamesCount, string str1, string str2)
         {
             InitializeComponent();
 
@@ -28,6 +30,11 @@ namespace Chomp
             this.minHeight = minHeight;
             this.maxHeight = maxHeight;
             this.gamesCount = gamesCount;
+
+            if (str1 == "losowa")
+                this.strategy1 = Strategy.Random;
+            if (str2 == "losowa")
+                this.strategy2 = Strategy.Random;
 
             Text = $"Tryb testowy ({this.gamesCount} gier)";
         }
@@ -56,7 +63,7 @@ namespace Chomp
                         Width = width,
                         Height = height
                     };
-                    var game = new Game(board);
+                    var game = new Game(board, this.strategy1, this.strategy2);
 
                     while (!board.IsEndOfTheGame())
                     {
