@@ -6,8 +6,8 @@ namespace Chomp
     public partial class Settings : Form
     {
         private const int minDimension = 2;
-        private const int maxDimension = 100;
-        private const int maxGames = 1000;
+        private const int maxDimension = 30;
+        private const int maxGames = 100;
 
         public Settings()
         {
@@ -94,11 +94,6 @@ namespace Chomp
 
             var game = new TestGames(minWidth, maxWidth, minHeight, maxHeight, gamesCount, str_1, str_2);
             game.Show();
-        }
-
-        private void tableLayoutPanel4_Paint(object sender, PaintEventArgs e)
-        {
-
         }
     }
 }

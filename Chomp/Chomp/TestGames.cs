@@ -82,10 +82,7 @@ namespace Chomp
                     dict[winner]++;
                 });
 
-                if (i % 5 == 0)
-                {
-                    UpdateGameLabel(i);
-                }
+                UpdateGameLabel(i);
             }
 
             // So that text won't flash when calculations are super fast
