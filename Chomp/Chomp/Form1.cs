@@ -29,6 +29,13 @@ namespace Chomp
                 MarkFieldsAsChoosen(x, y);
             }
 
+            public bool IsAvailableMove(int x, int y)
+            {
+                if (x >= Width || y >= Height)
+                    return false;
+                return !ChoosenFields.Contains((x, y));
+            }
+
             public Board MakeNextMove((int x, int y) move)
             {
                 var newBoard = new Board()
@@ -101,11 +108,11 @@ namespace Chomp
 
             public bool? MoveOfFirstPlayer { get; set; }
 
-            public Game(Board board)
+            public Game(Board board, Strategy? strategy1, Strategy? strategy2)
             {
                 _board = board;
-                _player1 = new Player(_board);
-                _player2 = new Player(_board);
+                _player1 = new Player(_board, strategy1);
+                _player2 = new Player(_board, strategy2);
             }
 
             public async Task MakeMoveAsync()
@@ -129,11 +136,11 @@ namespace Chomp
             private readonly Strategy strategy;
             private bool? amIFirstPlayer;
 
-            public Player(Board board)
+            public Player(Board board, Strategy? forcedStrategy)
             {
                 _board = board;
-                strategy = GetStrategy();
-                _alphaBeta = new AlphaBetaStrategy(4, SimpleEvaluator.Evaluate);
+                strategy = forcedStrategy == null ? GetStrategy() : (Strategy)forcedStrategy;
+                _alphaBeta = new AlphaBeta(4, SimpleEvaluator.Evaluate);
             }
 
             public async Task MakeMoveAsync()
@@ -144,11 +151,11 @@ namespace Chomp
                 }
 
                 // second player hasnt winning strategy, so always same move
-                if (!amIFirstPlayer.Value)
-                {
-                    await Make_NM_MoveAsync();
-                    return;
-                }
+                //if (!amIFirstPlayer.Value)
+                //{
+                //    await Make_NM_MoveAsync();
+                //    return;
+                //}
 
                 // first player strategies
                 switch (strategy)
@@ -162,19 +169,26 @@ namespace Chomp
                     case Strategy.NM:
                         await Make_NM_MoveAsync();
                         break;
+                    case Strategy.Random:
+                        Make_Random_Move();
+                        break;
                 }
             }
 
             private void Make_NN_Move()
             {
-                if (_board.MovesList.Count == 0)
+                //if (_board.MovesList.Count == 0)
+                if (_board.IsAvailableMove(1,1))
                 {
                     _board.MakeMove(1, 1);
                 }
                 else
                 {
-                    var (x, y) = _board.MovesList.Last();
-                    _board.MakeMove(y, x);
+                    var lastMoveOfSecondPlayer = _board.MovesList.Last();
+                    if (_board.IsAvailableMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x))
+                        _board.MakeMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x);
+                    else
+                        Make_Random_Move();
                 }
             }
 
@@ -185,6 +199,18 @@ namespace Chomp
                 {
                     return _alphaBeta.GetBestMoves(_board, player_to_maximize);
                 });
+
+                var random = new Random();
+                var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
+                var (x, y) = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
+
+                _board.MakeMove(x, y);
+
+            }
+
+            private void Make_Random_Move()
+            {
+                var allPossibbleMoves = _board.GetAllPossibleMoves();
 
                 var random = new Random();
                 var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
@@ -349,16 +375,26 @@ namespace Chomp
 
             private void Make_TwoN_Move()
             {
-                if (_board.MovesList.Count == 0)
+                //if (_board.MovesList.Count == 0)
+                //{
+                //    if (_board.Width == 2)
+                //    {
+                //        _board.MakeMove(1, _board.Height - 1);
+                //    }
+                //    else
+                //    {
+                //        _board.MakeMove(_board.Width - 1, 1);
+                //    }
+                //    return;
+                //}
+                if (_board.Width == 2 && _board.IsAvailableMove(1, _board.Height - 1))
                 {
-                    if (_board.Width == 2)
-                    {
-                        _board.MakeMove(1, _board.Height - 1);
-                    }
-                    else
-                    {
-                        _board.MakeMove(_board.Width - 1, 1);
-                    }
+                    _board.MakeMove(1, _board.Height - 1);
+                    return;
+                }
+                else if (_board.Height == 2 && _board.IsAvailableMove(_board.Width - 1, 1))
+                {
+                    _board.MakeMove(_board.Width - 1, 1);
                     return;
                 }
                 else
@@ -370,17 +406,26 @@ namespace Chomp
 
                         if (rightRowLastBottom == leftRowLastBottom)
                         {
-                            _board.MakeMove(1, rightRowLastBottom - 1);
+                            if (_board.IsAvailableMove(1, rightRowLastBottom - 1))
+                                _board.MakeMove(1, rightRowLastBottom - 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (leftRowLastBottom < rightRowLastBottom)
                         {
-                            _board.MakeMove(1, leftRowLastBottom - 1);
+                            if (_board.IsAvailableMove(1, leftRowLastBottom - 1))
+                                _board.MakeMove(1, leftRowLastBottom - 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (leftRowLastBottom > rightRowLastBottom)
                         {
-                            _board.MakeMove(0, rightRowLastBottom + 1);
+                            if (_board.IsAvailableMove(0, rightRowLastBottom + 1))
+                                _board.MakeMove(0, rightRowLastBottom + 1);
+                            else
+                                Make_Random_Move();
                         }
                         return;
                     }
@@ -391,17 +436,26 @@ namespace Chomp
 
                         if (bottomRowLastLeft == topRowLastLeft)
                         {
-                            _board.MakeMove(bottomRowLastLeft - 1, 1);
+                            if (_board.IsAvailableMove(bottomRowLastLeft - 1, 1))
+                                _board.MakeMove(bottomRowLastLeft - 1, 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (topRowLastLeft < bottomRowLastLeft)
                         {
-                            _board.MakeMove(topRowLastLeft - 1, 1);
+                            if (_board.IsAvailableMove(topRowLastLeft - 1, 1))
+                                _board.MakeMove(topRowLastLeft - 1, 1);
+                            else
+                                Make_Random_Move();
                         }
 
                         if (topRowLastLeft > bottomRowLastLeft)
                         {
-                            _board.MakeMove(bottomRowLastLeft + 1, 0);
+                            if (_board.IsAvailableMove(bottomRowLastLeft + 1, 0))
+                                _board.MakeMove(bottomRowLastLeft + 1, 0);
+                            else
+                                Make_Random_Move();
                         }
                         return;
                     }
@@ -428,22 +482,31 @@ namespace Chomp
         {
             TwoN,
             NN,
-            NM
+            NM,
+            Random
         }
 
-        public Form1(int width, int height)
+        public Form1(int width, int height, string strategy1, string strategy2)
         {
             InitializeComponent();
             closeButton.Visible = false;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
 
+            Strategy? str_1 = null;
+            Strategy? str_2 = null;
+
+            if (strategy1 == "losowa")
+                str_1 = Strategy.Random;
+            if (strategy2 == "losowa")
+                str_2 = Strategy.Random;
+
             board = new Board
             {
                 Width = width,
                 Height = height
             };
-            game = new Game(board);
+            game = new Game(board, str_1,  str_2);
 
             UpdateBoard();
             UpdateLabel();
