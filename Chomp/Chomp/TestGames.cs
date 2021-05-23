@@ -17,6 +17,8 @@ namespace Chomp
         public TestGames(int minWidth, int maxWidth, int minHeight, int maxHeight, int gamesCount)
         {
             InitializeComponent();
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
 
             gameLabel.Visible = false;
             player1Label.Visible = false;
@@ -35,6 +37,7 @@ namespace Chomp
         private async void startButton_Click(object sender, EventArgs e)
         {
             gameLabel.Visible = true;
+            UpdateGameLabel(0);
             startButton.Visible = false;
 
             var dict = new Dictionary<int, int>()
@@ -46,7 +49,7 @@ namespace Chomp
             var random = new Random();
             for (int i = 1; i <= gamesCount; i++)
             {
-                await Task.Run(() =>
+                await Task.Run(async () =>
                 {
                     var width = random.Next(minWidth, maxWidth);
                     var height = random.Next(minHeight, maxHeight);
@@ -60,12 +63,17 @@ namespace Chomp
 
                     while (!board.IsEndOfTheGame())
                     {
-                        game.MakeMove();
+                        await game.MakeMoveAsync();
                     }
 
                     var winner = game.MoveOfFirstPlayer.Value ? 2 : 1;
                     dict[winner]++;
                 });
+
+                if (i % 5 == 0)
+                {
+                    UpdateGameLabel(i);
+                }
             }
 
             // So that text won't flash when calculations are super fast
@@ -83,6 +91,11 @@ namespace Chomp
         private void closeButton_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void UpdateGameLabel(int currentProgress)
+        {
+            gameLabel.Text = $"Trwa gra obliczanie gier (zakończono {currentProgress}/{gamesCount})...";
         }
     }
 }

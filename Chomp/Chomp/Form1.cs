@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Chomp
@@ -9,14 +10,14 @@ namespace Chomp
     public partial class Form1 : Form
     {
         private Bitmap basicBoard;
-        private Board board;
-        private Game game;
+        private readonly Board board;
+        private readonly Game game;
+
 
         public class Board
         {
             public int Width { get; set; }
             public int Height { get; set; }
-
 
             public HashSet<(int x, int y)> ChoosenFields { get; set; } = new HashSet<(int x, int y)>();
             public List<(int x, int y)> MovesList { get; set; } = new List<(int x, int y)>();
@@ -32,30 +33,14 @@ namespace Chomp
             {
                 var newBoard = new Board()
                 {
-                    Width = this.Width,
-                    Height = this.Height,
-                    MovesList = new List<(int x, int y)>(this.MovesList),
-                    ChoosenFields = new HashSet<(int x, int y)>((this.ChoosenFields))
+                    Width = Width,
+                    Height = Height,
+                    MovesList = new List<(int x, int y)>(MovesList),
+                    ChoosenFields = new HashSet<(int x, int y)>(ChoosenFields)
                 };
-                newBoard.MovesList.Add((move.x, move.y));
-                MarkFieldsAsChoosen(newBoard.ChoosenFields, move.x, move.y);
+
+                newBoard.MakeMove(move.x, move.y);
                 return newBoard;
-            }
-
-            private void MarkFieldsAsChoosen(int x, int y)
-            {
-                MarkFieldsAsChoosen(this.ChoosenFields, x, y);
-            }
-
-            private void MarkFieldsAsChoosen(HashSet<(int x, int y)> choosenFields, int x, int y)
-            {
-                for (int i = x; i < Width; i++)
-                {
-                    for (int j = y; j < Height; j++)
-                    {
-                        choosenFields.Add((i, j));
-                    }
-                }
             }
 
             public bool IsEndOfTheGame()
@@ -68,9 +53,9 @@ namespace Chomp
                 return MovesList.Count % 2 == 0;
             }
 
-            public IEnumerable<(int x, int y)> GetAllPossibleMoves()
+            public HashSet<(int x, int y)> GetAllPossibleMoves()
             {
-                HashSet<(int x, int y)> allPossibbleMoves = new HashSet<(int, int)>();
+                HashSet<(int x, int y)> allPossibbleMoves = new(Width * Height - 1 - ChoosenFields.Count);
 
                 for (int i = 0; i < Width; i++)
                 {
@@ -80,26 +65,36 @@ namespace Chomp
                         {
                             continue;
                         }
-                        allPossibbleMoves.Add((i, j));
+
+                        if (!ChoosenFields.Contains((i, j)))
+                        {
+                            allPossibbleMoves.Add((i, j));
+                        }
                     }
                 }
 
-                foreach (var pair in ChoosenFields)
-                {
-                    allPossibbleMoves.Remove(pair);
-                }
-
                 return allPossibbleMoves;
+            }
+
+            private void MarkFieldsAsChoosen(int x, int y)
+            {
+                for (int i = x; i < Width; i++)
+                {
+                    for (int j = y; j < Height; j++)
+                    {
+                        ChoosenFields.Add((i, j));
+                    }
+                }
             }
         }
 
         public class Game
         {
-            private Board _board;
-            private Player _player1;
-            private Player _player2;
+            private readonly Board _board;
+            private readonly Player _player1;
+            private readonly Player _player2;
 
-            public Player GetPlayerTurn() 
+            public Player GetPlayerTurn()
             {
                 return MoveOfFirstPlayer.HasValue ? MoveOfFirstPlayer.Value ? _player1 : _player2 : null;
             }
@@ -113,26 +108,24 @@ namespace Chomp
                 _player2 = new Player(_board);
             }
 
-
-            public void MakeMove()
+            public async Task MakeMoveAsync()
             {
                 if (MoveOfFirstPlayer == null || MoveOfFirstPlayer.Value)
                 {
-                    _player1.MakeMove();
+                    await _player1.MakeMoveAsync();
                     MoveOfFirstPlayer = false;
                     return;
                 }
 
-                _player2.MakeMove();
+                await _player2.MakeMoveAsync();
                 MoveOfFirstPlayer = !MoveOfFirstPlayer;
             }
-
         }
 
         public class Player
         {
             private Board _board;
-            private AlphaBeta _alphaBeta;
+            private AlphaBetaStrategy _alphaBeta;
             private readonly Strategy strategy;
             private bool? amIFirstPlayer;
 
@@ -140,10 +133,10 @@ namespace Chomp
             {
                 _board = board;
                 strategy = GetStrategy();
-                _alphaBeta = new AlphaBeta(3, SimpleEvaluator.Evaluate);
+                _alphaBeta = new AlphaBetaStrategy(4, SimpleEvaluator.Evaluate);
             }
 
-            public void MakeMove()
+            public async Task MakeMoveAsync()
             {
                 if (amIFirstPlayer == null)
                 {
@@ -153,7 +146,7 @@ namespace Chomp
                 // second player hasnt winning strategy, so always same move
                 if (!amIFirstPlayer.Value)
                 {
-                    Make_NM_Move();
+                    await Make_NM_MoveAsync();
                     return;
                 }
 
@@ -167,7 +160,7 @@ namespace Chomp
                         Make_TwoN_Move();
                         break;
                     case Strategy.NM:
-                        Make_NM_Move();
+                        await Make_NM_MoveAsync();
                         break;
                 }
             }
@@ -180,35 +173,43 @@ namespace Chomp
                 }
                 else
                 {
-                    var lastMoveOfSecondPlayer = _board.MovesList.Last();
-                    _board.MakeMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x);
+                    var (x, y) = _board.MovesList.Last();
+                    _board.MakeMove(y, x);
                 }
             }
 
-            // TODO proper implementation
-            private void Make_NM_Move()
+            private async Task Make_NM_MoveAsync()
             {
-                // for now random move
-                var allPossibbleMoves = _board.GetAllPossibleMoves();
-                //var allPossibbleMoves = _alphaBeta.GetBestMoves(_board, amIFirstPlayer.Value);
+                var player_to_maximize = _board.IsMoveOfFirstPlayer() ? 1 : 2;
+                var allPossibbleMoves = await Task.Run(() =>
+                {
+                    return _alphaBeta.GetBestMoves(_board, player_to_maximize);
+                });
 
                 var random = new Random();
                 var choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
-                var choosenMove = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
+                var (x, y) = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
 
-                _board.MakeMove(choosenMove.x, choosenMove.y);
-
+                _board.MakeMove(x, y);
             }
 
             private class SimpleEvaluator
             {
+                private const double winValue = 100;
+
                 public static double Evaluate(Board board)
                 {
-                    var possibleMoves = board.GetAllPossibleMoves();
-                    if (possibleMoves.Any())
+                    if (board.IsEndOfTheGame())
                     {
-                        return double.MaxValue;
+                        return -winValue;
                     }
+
+                    var possibleMoves = board.GetAllPossibleMoves();
+                    if (possibleMoves.Count == 1)
+                    {
+                        return winValue;
+                    }
+
                     int goodMoves = 0;
                     foreach (var move in possibleMoves)
                     {
@@ -223,35 +224,35 @@ namespace Chomp
 
                 private static bool IsBadPosition(Board board)
                 {
-                    return board.ChoosenFields.Count() % 2 == 1;
+                    return board.ChoosenFields.Count % 2 == 1;
                 }
             }
 
-            private class AlphaBeta
+            private class AlphaBetaStrategy
             {
-                private int _max_depth { get; set; }
+                private int _maxDepth { get; set; }
                 private Func<Board, double> _evaluation { get; set; }
                 private double _eps { get; set; }
 
-                public AlphaBeta(int max_depth, Func<Board, double> evaluation, double eps = 0)
+                public AlphaBetaStrategy(int max_depth, Func<Board, double> evaluation, double eps = 0)
                 {
-                    this._max_depth = max_depth;
-                    this._evaluation = evaluation;
-                    this._eps = eps;
+                    _maxDepth = max_depth;
+                    _evaluation = evaluation;
+                    _eps = eps;
                 }
 
-                public IEnumerable<(int x, int y)> GetBestMoves(Board board, bool is_first_player)
+                public IEnumerable<(int x, int y)> GetBestMoves(Board board, int player_to_maximize)
                 {
                     var allPossibbleMoves = board.GetAllPossibleMoves();
 
-                    double alpha = double.MinValue; 
+                    double alpha = double.MinValue;
                     double beta = double.MaxValue;
 
                     var moves = new List<((int x, int y), double)>();
 
                     foreach (var move in allPossibbleMoves)
                     {
-                        var value = eval_move(board, move, _max_depth, ref alpha, ref beta, is_first_step: true, is_first_player);
+                        var value = EvalMove(board, move, _maxDepth, alpha, beta, is_first_step: true, player_to_maximize);
                         moves.Add((move, value));
                         alpha = Math.Max(alpha, value);
                     }
@@ -260,15 +261,17 @@ namespace Chomp
                     return bestMoves.Any() ? bestMoves : allPossibbleMoves;
                 }
 
-                private double eval_move(Board board, (int x, int y) move, int depth, ref double alpha, ref double beta, bool is_first_step, bool is_first_player)
+                private double EvalMove(Board board, (int x, int y) move, int depth, double alpha, double beta, bool is_first_step, int player_to_maximize)
                 {
                     var newBoard = board.MakeNextMove(move);
-                    return alpha_beta(newBoard, depth - 1, ref alpha, ref beta, is_first_step, is_first_player);
+                    return AlphaBeta(newBoard, depth - 1, alpha, beta, is_first_step, player_to_maximize);
                 }
 
-                private double alpha_beta(Board board, int depth, ref double alpha, ref double beta, bool is_first_step, bool is_first_player)
+                private double AlphaBeta(Board board, int depth, double alpha, double beta, bool is_first_step, int player_to_maximize)
                 {
-                    var is_maximizing = board.IsMoveOfFirstPlayer() == is_first_player;
+                    var currentPlayerTurn = board.IsMoveOfFirstPlayer() ? 1 : 2;
+                    var is_maximizing = currentPlayerTurn == player_to_maximize;
+
                     var posible_moves = board.GetAllPossibleMoves();
                     var is_game_over = board.IsEndOfTheGame();
 
@@ -287,9 +290,9 @@ namespace Chomp
                         var value = double.MinValue;
                         foreach (var move in posible_moves)
                         {
-                            value = Math.Max(value, eval_move(board, move, depth, ref alpha, ref beta, is_first_step, is_first_player));
+                            value = Math.Max(value, EvalMove(board, move, depth, alpha, beta, false, player_to_maximize));
                             alpha = Math.Max(alpha, value);
-                            if (should_cut(alpha, beta, _eps, is_first_step))
+                            if (ShouldCut(alpha, beta, _eps, is_first_step))
                             {
                                 break;
                             }
@@ -301,9 +304,9 @@ namespace Chomp
                         var value = double.MaxValue;
                         foreach (var move in posible_moves)
                         {
-                            value = Math.Min(value, eval_move(board, move, depth, ref alpha, ref beta, is_first_step, is_first_player));
+                            value = Math.Min(value, EvalMove(board, move, depth, alpha, beta, false, player_to_maximize));
                             beta = Math.Min(beta, value);
-                            if (should_cut(alpha, beta, _eps, is_first_step))
+                            if (ShouldCut(alpha, beta, _eps, is_first_step))
                             {
                                 break;
                             }
@@ -312,12 +315,11 @@ namespace Chomp
                     }
                 }
 
-                private bool should_cut(double alpha, double beta, double eps, bool is_first_step)
+                private bool ShouldCut(double alpha, double beta, double eps, bool is_first_step)
                 {
-                    return false;
                     if (is_first_step)
                     {
-                        if (compare(alpha, beta, eps) > 0)
+                        if (Compare(alpha, beta, eps) > 0)
                         {
                             return true;
                         }
@@ -332,7 +334,7 @@ namespace Chomp
                     return false;
                 }
 
-                private int compare(double alpha, double beta, double eps)
+                private static int Compare(double alpha, double beta, double eps)
                 {
                     if (Math.Abs(alpha - beta) <= eps)
                     {
@@ -433,6 +435,8 @@ namespace Chomp
         {
             InitializeComponent();
             closeButton.Visible = false;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
 
             board = new Board
             {
@@ -464,16 +468,19 @@ namespace Chomp
             int widthOfTile = pictureBox1.Size.Width / board.Width;
             int heightOfTile = pictureBox1.Size.Height / board.Height;
 
+            widthOfTile = Math.Min(widthOfTile, heightOfTile);
+            heightOfTile = widthOfTile;
+
             basicBoard = new Bitmap(widthOfTile * board.Width, heightOfTile * board.Height);
 
             using (var graphics = Graphics.FromImage(basicBoard))
             {
-                SolidBrush brushGoal = new SolidBrush(Color.SaddleBrown);
-                SolidBrush choosenField = new SolidBrush(Color.Gray);
+                using SolidBrush brushGoal = new(Color.SaddleBrown);
+                using SolidBrush brushLastPiece = new(Color.Red);
+                using SolidBrush choosenField = new(Color.Gray);
 
-
-                SolidBrush brush = new SolidBrush(Color.White);
-                Pen penBorder = new Pen(Color.Black, 2);
+                using SolidBrush brush = new(Color.White);
+                using Pen penBorder = new(Color.Black, 2);
 
                 for (int x = 0; x < board.Width; x++)
                 {
@@ -485,7 +492,6 @@ namespace Chomp
                     }
                 }
 
-                SolidBrush brushLastPiece = new SolidBrush(Color.Red);
                 graphics.FillRectangle(brushLastPiece, new Rectangle(0, 0, widthOfTile, heightOfTile));
                 graphics.DrawRectangle(penBorder, new Rectangle(0, 0, widthOfTile, heightOfTile));
             }
@@ -494,10 +500,17 @@ namespace Chomp
             pictureBox1.Refresh();
         }
 
-        private void button1_Click(object sender, System.EventArgs e)
+        private async void button1_Click(object sender, EventArgs e)
         {
-            game.MakeMove();
+            button1.Enabled = false;
+
+            await game.MakeMoveAsync();
             UpdateAfterPlayerMove();
+
+            if (!board.IsEndOfTheGame())
+            {
+                button1.Enabled = true;
+            }
         }
 
         private void UpdateLabel()

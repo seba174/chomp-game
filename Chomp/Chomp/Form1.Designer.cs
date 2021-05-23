@@ -48,7 +48,7 @@ namespace Chomp
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(500, 450);
+            this.pictureBox1.Size = new System.Drawing.Size(596, 561);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             // 
@@ -56,6 +56,7 @@ namespace Chomp
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer1.IsSplitterFixed = true;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
             // 
@@ -66,9 +67,13 @@ namespace Chomp
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.tableLayoutPanel1);
-            this.splitContainer1.Size = new System.Drawing.Size(800, 450);
-            this.splitContainer1.SplitterDistance = 500;
-            this.splitContainer1.TabIndex = 1;
+            this.splitContainer1.Panel2.Margin = new System.Windows.Forms.Padding(0, 0, 10, 0);
+            this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(0, 0, 30, 0);
+            this.splitContainer1.Size = new System.Drawing.Size(884, 561);
+            this.splitContainer1.SplitterDistance = 596;
+            this.splitContainer1.SplitterWidth = 1;
+            this.splitContainer1.TabIndex = 20;
+            this.splitContainer1.TabStop = false;
             // 
             // tableLayoutPanel1
             // 
@@ -85,15 +90,15 @@ namespace Chomp
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 12.22222F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.66667F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 61.11111F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(296, 450);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(257, 561);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // button1
             // 
             this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button1.Location = new System.Drawing.Point(3, 111);
+            this.button1.Location = new System.Drawing.Point(3, 138);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(290, 60);
+            this.button1.Size = new System.Drawing.Size(251, 76);
             this.button1.TabIndex = 0;
             this.button1.Text = "Wykonaj ruch";
             this.button1.UseVisualStyleBackColor = true;
@@ -106,7 +111,7 @@ namespace Chomp
             this.label1.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.label1.Location = new System.Drawing.Point(3, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(290, 54);
+            this.label1.Size = new System.Drawing.Size(251, 67);
             this.label1.TabIndex = 1;
             this.label1.Text = "Ruch gracza:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -114,9 +119,9 @@ namespace Chomp
             // closeButton
             // 
             this.closeButton.Dock = System.Windows.Forms.DockStyle.Top;
-            this.closeButton.Location = new System.Drawing.Point(3, 177);
+            this.closeButton.Location = new System.Drawing.Point(3, 220);
             this.closeButton.Name = "closeButton";
-            this.closeButton.Size = new System.Drawing.Size(290, 60);
+            this.closeButton.Size = new System.Drawing.Size(251, 60);
             this.closeButton.TabIndex = 2;
             this.closeButton.Text = "Zamknij";
             this.closeButton.UseVisualStyleBackColor = true;
@@ -126,7 +131,7 @@ namespace Chomp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(884, 561);
             this.Controls.Add(this.splitContainer1);
             this.Name = "Form1";
             this.Text = "Tryb demo";

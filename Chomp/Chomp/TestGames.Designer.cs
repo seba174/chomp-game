@@ -40,11 +40,11 @@ namespace Chomp
             // 
             this.gameLabel.AutoSize = true;
             this.gameLabel.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.gameLabel.Location = new System.Drawing.Point(262, 120);
+            this.gameLabel.Location = new System.Drawing.Point(158, 120);
             this.gameLabel.Name = "gameLabel";
-            this.gameLabel.Size = new System.Drawing.Size(280, 32);
+            this.gameLabel.Size = new System.Drawing.Size(509, 32);
             this.gameLabel.TabIndex = 0;
-            this.gameLabel.Text = "Trwa gra obliczanie gier...";
+            this.gameLabel.Text = "Trwa gra obliczanie gier (zakończono 10/100)...";
             // 
             // startButton
             // 

@@ -6,12 +6,14 @@ namespace Chomp
     public partial class Settings : Form
     {
         private const int minDimension = 2;
-        private const int maxDimension = 50;
+        private const int maxDimension = 20;
         private const int maxGames = 100;
 
         public Settings()
         {
             InitializeComponent();
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
 
             numericUpDown1.Value = 10;
             numericUpDown2.Value = 10;
