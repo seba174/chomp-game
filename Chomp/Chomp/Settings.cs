@@ -32,10 +32,10 @@ namespace Chomp
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var width = (int)numericUpDown1.Value;
-            var height = (int)numericUpDown2.Value;
-            var str_1 = (string)strategy_demo_1.SelectedItem;
-            var str_2 = (string)strategy_demo_2.SelectedItem;
+            int width = (int)numericUpDown1.Value;
+            int height = (int)numericUpDown2.Value;
+            string str_1 = (string)strategy_demo_1.SelectedItem;
+            string str_2 = (string)strategy_demo_2.SelectedItem;
 
             if (width < minDimension || height < minDimension)
             {
@@ -55,13 +55,13 @@ namespace Chomp
 
         private void button2_Click(object sender, EventArgs e)
         {
-            var minWidth = (int)minWidthControl.Value;
-            var maxWidth = (int)maxWidthControl.Value;
-            var minHeight = (int)minHeightControl.Value;
-            var maxHeight = (int)maxHeightControl.Value;
-            var gamesCount = (int)gamesCountControl.Value;
-            var str_1 = (string)strategy_test_1.SelectedItem;
-            var str_2 = (string)strategy_test_2.SelectedItem;
+            int minWidth = (int)minWidthControl.Value;
+            int maxWidth = (int)maxWidthControl.Value;
+            int minHeight = (int)minHeightControl.Value;
+            int maxHeight = (int)maxHeightControl.Value;
+            int gamesCount = (int)gamesCountControl.Value;
+            string str_1 = (string)strategy_test_1.SelectedItem;
+            string str_2 = (string)strategy_test_2.SelectedItem;
 
             if (minWidth > maxWidth)
             {

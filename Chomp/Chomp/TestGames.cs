@@ -13,8 +13,8 @@ namespace Chomp
         private readonly int minHeight;
         private readonly int maxHeight;
         private readonly int gamesCount;
-        private  Strategy? strategy1 = null;
-        private  Strategy? strategy2 = null;
+        private readonly Strategy? strategy1 = null;
+        private readonly Strategy? strategy2 = null;
 
         public TestGames(int minWidth, int maxWidth, int minHeight, int maxHeight, int gamesCount, string str1, string str2)
         {
@@ -34,9 +34,14 @@ namespace Chomp
             this.gamesCount = gamesCount;
 
             if (str1 == "losowa")
-                this.strategy1 = Strategy.Random;
+            {
+                strategy1 = Strategy.Random;
+            }
+
             if (str2 == "losowa")
-                this.strategy2 = Strategy.Random;
+            {
+                strategy2 = Strategy.Random;
+            }
 
             Text = $"Tryb testowy ({this.gamesCount} gier)";
         }
@@ -47,33 +52,33 @@ namespace Chomp
             UpdateGameLabel(0);
             startButton.Visible = false;
 
-            var dict = new Dictionary<int, int>()
+            Dictionary<int, int> dict = new()
             {
                 { 1, 0 },
                 { 2, 0 }
             };
 
-            var random = new Random();
+            Random random = new();
             for (int i = 1; i <= gamesCount; i++)
             {
                 await Task.Run(async () =>
                 {
-                    var width = random.Next(minWidth, maxWidth);
-                    var height = random.Next(minHeight, maxHeight);
+                    int width = random.Next(minWidth, maxWidth);
+                    int height = random.Next(minHeight, maxHeight);
 
-                    var board = new Board
+                    Board board = new()
                     {
                         Width = width,
                         Height = height
                     };
-                    var game = new Game(board, this.strategy1, this.strategy2);
+                    Game game = new(board, strategy1, strategy2);
 
                     while (!board.IsEndOfTheGame())
                     {
                         await game.MakeMoveAsync();
                     }
 
-                    var winner = game.MoveOfFirstPlayer.Value ? 2 : 1;
+                    int winner = game.MoveOfFirstPlayer.Value ? 2 : 1;
                     dict[winner]++;
                 });
 
