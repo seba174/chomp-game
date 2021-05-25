@@ -39,9 +39,11 @@ namespace Chomp
             }
 
             if (str2 == "losowa")
-            {
-                strategy2 = Strategy.Random;
-            }
+                this.strategy2 = Strategy.Random;
+            if (str1 == "półlosowa")
+                this.strategy1 = Strategy.Semirandom;
+            if (str2 == "półlosowa")
+                this.strategy2 = Strategy.Semirandom;
 
             Text = $"Tryb testowy ({this.gamesCount} gier)";
         }

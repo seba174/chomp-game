@@ -29,6 +29,68 @@ namespace Chomp
                 MarkFieldsAsChoosen(x, y);
             }
 
+            public int GetHorizontalLastField()
+            {
+                int count = 0;
+                while (count < this.Width -1 && !this.ChoosenFields.Contains((count + 1, 0)))
+                    count++;
+                return count;
+            }
+
+            public int GetVerticalLastField()
+            {
+                int count = 0;
+                while (count < this.Height -1 && !this.ChoosenFields.Contains((0, count + 1)))
+                    count++;
+                return count;
+            }
+
+            public bool IsRemainedNxNBoard()
+            {
+                if (Height == Width)
+                    return true;
+                if (ChoosenFields.Count == 0)
+                    return Height == Width;
+                if (ChoosenFields.Contains((1, 1)))
+                    return true;
+                int i = 0;
+                while (i < Width && i < Height)
+                {
+                    if (ChoosenFields.Contains((i, i)))
+                    {
+                        for (int j = i - 1; j >= 0; j--)
+                        {
+                            if (!ChoosenFields.Contains((j, i)) || !ChoosenFields.Contains((i, j)))
+                            {
+                                return false;
+                            }
+
+                        }
+                        return true;
+                    }
+                    i++;
+                }
+
+                return false;
+            }
+
+            public bool IsRemained2xNBoard()
+            {
+                if (Height == 2 || Width == 2)
+                    return true;
+                if (ChoosenFields.Count == 0)
+                    return Height == 2 || Width == 2;
+                for (int i = 0; i < Height; i++)
+                    if (!ChoosenFields.Contains((2, i)))
+                    {
+                        for (int j = 0; j < Width; j++)
+                            if (!ChoosenFields.Contains((j, 2)))
+                                return false;
+                        return true;
+                    }
+                return true;
+            }
+
             public bool IsAvailableMove(int x, int y)
             {
                 if (x >= Width || y >= Height)
@@ -167,6 +229,10 @@ namespace Chomp
                     case Strategy.Random:
                         Make_Random_Move();
                         break;
+                    case Strategy.Semirandom:
+                        Make_Semirandom_Move();
+                        break;
+
                 }
             }
 
@@ -178,17 +244,27 @@ namespace Chomp
                 }
                 else
                 {
-                    (int x, int y) = _board.MovesList.Last();
-                    if (_board.IsAvailableMove(y, x))
+                    var lastX = _board.GetHorizontalLastField();
+                    var lastY = _board.GetVerticalLastField();
+                    if (lastX != lastY)
                     {
-                        _board.MakeMove(y, x);
+                        if (lastX < lastY)
+                            _board.MakeMove(0, lastX + 1);
+                        else
+                            _board.MakeMove(lastY + 1, 0);
                     }
                     else
                     {
                         Make_Random_Move();
+                        //var lastMoveOfSecondPlayer = _board.MovesList.Last();
+                        //if (_board.IsAvailableMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x))
+                        //    _board.MakeMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x);
+                        //else
+                        //    Make_Random_Move();
                     }
                 }
             }
+
 
             private async Task Make_NM_MoveAsync()
             {
@@ -214,6 +290,25 @@ namespace Chomp
                 (int x, int y) = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
 
                 _board.MakeMove(x, y);
+            }
+
+            private void Make_Semirandom_Move()
+            {
+                if (_board.IsRemainedNxNBoard())
+                {
+                    Make_NN_Move();
+                    return;
+                }
+                else if (_board.IsRemained2xNBoard())
+                {
+                    Make_TwoN_Move();
+                    return;
+                }
+                else
+                {
+                    Make_Random_Move();
+                }
+
             }
 
             private class SimpleEvaluator
@@ -384,7 +479,7 @@ namespace Chomp
                 }
                 else
                 {
-                    if (_board.Width == 2)
+                    if (_board.Width == 2 || (this.strategy == Strategy.Semirandom && _board.GetHorizontalLastField() == 1))
                     {
                         int leftRowLastBottom = _board.ChoosenFields.Where(a => a.x == 0).DefaultIfEmpty((x: 0, y: _board.Height)).Min(a => a.y);
                         int rightRowLastBottom = _board.ChoosenFields.Where(a => a.x == 1).DefaultIfEmpty((x: 0, y: _board.Height)).Min(a => a.y);
@@ -492,7 +587,8 @@ namespace Chomp
             TwoN,
             NN,
             NM,
-            Random
+            Random,
+            Semirandom
         }
 
         public Form1(int width, int height, string strategy1, string strategy2)
@@ -509,9 +605,17 @@ namespace Chomp
             {
                 str_1 = Strategy.Random;
             }
+            else if (strategy1 == "półlosowa")
+            {
+                str_1 = Strategy.Semirandom;
+            }
             if (strategy2 == "losowa")
             {
                 str_2 = Strategy.Random;
+            }
+            else if (strategy2 == "półlosowa")
+            {
+                str_2 = Strategy.Semirandom;
             }
 
             board = new Board
