@@ -6,7 +6,7 @@ namespace Chomp
     public partial class Settings : Form
     {
         private const int minDimension = 2;
-        private const int maxDimension = 30;
+        private const int maxDimension = 20;
         private const int maxGames = 100;
 
         public Settings()
@@ -28,6 +28,23 @@ namespace Chomp
             minHeightControl.Value = 10;
             maxHeightControl.Value = 10;
             gamesCountControl.Value = 10;
+
+            numericUpDown1.Maximum = maxDimension;
+            numericUpDown2.Maximum = maxDimension;
+            minWidthControl.Maximum = maxDimension;
+            maxWidthControl.Maximum = maxDimension;
+            minHeightControl.Maximum = maxDimension;
+            maxHeightControl.Maximum = maxDimension;
+
+            numericUpDown1.Minimum = minDimension;
+            numericUpDown2.Minimum = minDimension;
+            minWidthControl.Minimum = minDimension;
+            maxWidthControl.Minimum = minDimension;
+            minHeightControl.Minimum = minDimension;
+            maxHeightControl.Minimum = minDimension;
+
+            gamesCountControl.Maximum = 100;
+            gamesCountControl.Minimum = 1;
         }
 
         private void button1_Click(object sender, EventArgs e)
