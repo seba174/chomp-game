@@ -29,18 +29,19 @@ namespace Chomp
                 MarkFieldsAsChoosen(x, y);
             }
 
-            public int GetHorizontalLastField()
+
+            public int GetHorizontalLastField(int y = 0)
             {
                 int count = 0;
-                while (count < this.Width -1 && !this.ChoosenFields.Contains((count + 1, 0)))
+                while (count < this.Width - 1 && !this.ChoosenFields.Contains((count + 1, y)))
                     count++;
                 return count;
             }
 
-            public int GetVerticalLastField()
+            public int GetVerticalLastField(int x = 0)
             {
                 int count = 0;
-                while (count < this.Height -1 && !this.ChoosenFields.Contains((0, count + 1)))
+                while (count < this.Height - 1 && !this.ChoosenFields.Contains((x, count + 1)))
                     count++;
                 return count;
             }
@@ -54,25 +55,63 @@ namespace Chomp
                 if (ChoosenFields.Contains((1, 1)))
                     return true;
                 int i = 0;
-                while (i < Width && i < Height)
-                {
-                    if (ChoosenFields.Contains((i, i)))
-                    {
-                        for (int j = i - 1; j >= 0; j--)
-                        {
-                            if (!ChoosenFields.Contains((j, i)) || !ChoosenFields.Contains((i, j)))
-                            {
-                                return false;
-                            }
 
-                        }
+                if (GetVerticalLastField() == GetHorizontalLastField())
+                {
+                    return true;
+                }
+                //while (i < Width && i < Height)
+                //{
+                //    if (ChoosenFields.Contains((i, i)))
+                //    {
+                //        for (int j = i - 1; j >= 0; j--)
+                //        {
+                //            if (!ChoosenFields.Contains((j, i)) || !ChoosenFields.Contains((i, j)))
+                //            {
+                //                return false;
+                //            }
+
+                //        }
+                //        return true;
+                //    }
+                //    i++;
+                //}
+
+                return false;
+            }
+
+            public bool IsWinningNxNBoard()
+            {
+                if (ChoosenFields.Contains((1, 1)))
+                {
+                    if (GetVerticalLastField() == GetHorizontalLastField())
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+
+                if (GetVerticalLastField() == GetHorizontalLastField())
+                {
+                    return true;
+                }
+                return false;
+            }
+
+            public bool IsLosingNxNBoard()
+            {
+                if (ChoosenFields.Contains((1, 1)))
+                {
+                    if (GetVerticalLastField() == GetHorizontalLastField())
+                    {
                         return true;
                     }
-                    i++;
+                    return false;
                 }
 
                 return false;
             }
+
 
             public bool IsRemained2xNBoard()
             {
@@ -80,15 +119,63 @@ namespace Chomp
                     return true;
                 if (ChoosenFields.Count == 0)
                     return Height == 2 || Width == 2;
-                for (int i = 0; i < Height; i++)
-                    if (!ChoosenFields.Contains((2, i)))
-                    {
-                        for (int j = 0; j < Width; j++)
-                            if (!ChoosenFields.Contains((j, 2)))
-                                return false;
+                if (ChoosenFields.Contains((2, 0)))
+                    return true;
+                if (ChoosenFields.Contains((0, 2)))
+                    return true;
+                return false;
+                //for (int i = 0; i < Height; i++)
+                //    if (!ChoosenFields.Contains((2, i)))
+                //    {
+                //        for (int j = 0; j < Width; j++)
+                //            if (!ChoosenFields.Contains((j, 2)))
+                //                return false;
+                //        return true;
+                //    }
+                //return true;
+            }
+
+            public bool IsWinning2xNBoard()
+            {
+                if (Width == 2 || ChoosenFields.Contains((2, 0)))
+                  {
+                    var max0 = GetVerticalLastField();
+                    var max1 = GetVerticalLastField(1);
+                    if (max0 == max1 + 1)
+                        return false;
+                    return true;
+                  }
+                if (Height == 2 || ChoosenFields.Contains((0, 2)))
+                {
+                    var max0 = GetHorizontalLastField();
+                    var max1 = GetHorizontalLastField(1);
+                    if (max0 == max1 + 1)
+                        return false;
+                    return true;
+                }
+                return false;
+            }
+
+
+            public bool IsLosing2xNBoard()
+            {
+                if (Width == 2 || ChoosenFields.Contains((2, 0)))
+                {
+                    var max0 = GetVerticalLastField();
+                    var max1 = GetVerticalLastField(1);
+                    if (max0 == max1 + 1)
                         return true;
-                    }
-                return true;
+                    return false;
+                }
+                if (Height == 2 || ChoosenFields.Contains((0, 2)))
+                {
+                    var max0 = GetHorizontalLastField();
+                    var max1 = GetHorizontalLastField(1);
+                    if (max0 == max1 + 1)
+                        return true;
+                    return false;
+                }
+                return false;
             }
 
             public bool IsAvailableMove(int x, int y)
@@ -173,11 +260,11 @@ namespace Chomp
 
             public bool? MoveOfFirstPlayer { get; set; }
 
-            public Game(Board board, Strategy? strategy1, Strategy? strategy2)
+            public Game(Board board, Strategy? strategy1, Strategy? strategy2, int depth1=4, int depth2=4)
             {
                 _board = board;
-                _player1 = new Player(_board, strategy1);
-                _player2 = new Player(_board, strategy2);
+                _player1 = new Player(_board, strategy1, depth1);
+                _player2 = new Player(_board, strategy2, depth2);
             }
 
             public async Task MakeMoveAsync()
@@ -201,11 +288,11 @@ namespace Chomp
             private readonly Strategy strategy;
             private bool? amIFirstPlayer;
 
-            public Player(Board board, Strategy? forcedStrategy)
+            public Player(Board board, Strategy? forcedStrategy, int depth = 4)
             {
                 _board = board;
                 strategy = forcedStrategy == null ? GetStrategy() : (Strategy)forcedStrategy;
-                _alphaBeta = new AlphaBetaStrategy(4, SimpleEvaluator.Evaluate);
+                _alphaBeta = new AlphaBetaStrategy(depth, SimpleEvaluator.Evaluate);
             }
 
             public async Task MakeMoveAsync()
@@ -218,10 +305,12 @@ namespace Chomp
                 switch (strategy)
                 {
                     case Strategy.NN:
-                        Make_NN_Move();
+                        //Make_NN_Move();
+                        await Make_NM_MoveAsync();
                         break;
                     case Strategy.TwoN:
-                        Make_TwoN_Move();
+                        //Make_TwoN_Move();
+                        await Make_NM_MoveAsync();
                         break;
                     case Strategy.NM:
                         await Make_NM_MoveAsync();
@@ -313,7 +402,7 @@ namespace Chomp
 
             private class SimpleEvaluator
             {
-                private const double winValue = 100000;
+                public const double winValue = 100000;
 
                 public static double Evaluate(Board board)
                 {
@@ -327,6 +416,17 @@ namespace Chomp
                     {
                         return winValue;
                     }
+
+                    if (board.IsWinningNxNBoard() || board.IsWinning2xNBoard())
+                    {
+                        return winValue;
+                    }
+
+                    if (board.IsLosing2xNBoard() || board.IsLosingNxNBoard())
+                    {
+                        return -winValue;
+                    }
+
 
                     int goodMoves = 0;
                     foreach ((int x, int y) move in possibleMoves)
@@ -342,7 +442,8 @@ namespace Chomp
 
                 private static bool IsBadPosition(Board board)
                 {
-                    return board.ChoosenFields.Count % 2 == 1;
+                    return false;
+                    //return board.ChoosenFields.Count % 2 == 1;
                 }
             }
 
@@ -351,6 +452,8 @@ namespace Chomp
                 private int _maxDepth { get; set; }
                 private Func<Board, double> _evaluation { get; set; }
                 private double _eps { get; set; }
+
+                private const double INIT_VALUE = 50000000;
 
                 public AlphaBetaStrategy(int max_depth, Func<Board, double> evaluation, double eps = 0)
                 {
@@ -363,10 +466,11 @@ namespace Chomp
                 {
                     var allPossibbleMoves = board.GetAllPossibleMoves();
 
-                    double alpha = double.MinValue;
-                    double beta = double.MaxValue;
+                    double alpha = -INIT_VALUE; //double.MinValue;
+                    double beta = INIT_VALUE; //double.MaxValue;
 
                     var moves = new List<((int x, int y), double)>();
+
 
                     foreach ((int x, int y) move in allPossibbleMoves)
                     {
@@ -393,19 +497,21 @@ namespace Chomp
                     var posible_moves = board.GetAllPossibleMoves();
                     bool is_game_over = board.IsEndOfTheGame();
 
-                    if (is_game_over || depth == 0)
+                    double value2 = _evaluation(board);
+
+
+                    if (is_game_over || depth == 0 || Math.Abs(value2) == SimpleEvaluator.winValue) 
                     {
-                        double value = _evaluation(board);
                         if (!is_maximizing)
                         {
-                            value *= -1;
+                            value2 *= -1;
                         }
-                        return value;
+                        return value2;
                     }
 
                     if (is_maximizing)
                     {
-                        double value = double.MinValue;
+                        double value = -INIT_VALUE;
                         foreach ((int x, int y) move in posible_moves)
                         {
                             value = Math.Max(value, EvalMove(board, move, depth, alpha, beta, false, player_to_maximize));
@@ -419,7 +525,7 @@ namespace Chomp
                     }
                     else
                     {
-                        double value = double.MaxValue;
+                        double value = INIT_VALUE;
                         foreach ((int x, int y) move in posible_moves)
                         {
                             value = Math.Min(value, EvalMove(board, move, depth, alpha, beta, false, player_to_maximize));
@@ -435,6 +541,7 @@ namespace Chomp
 
                 private static bool ShouldCut(double alpha, double beta, double eps, bool is_first_step)
                 {
+                    //return false;
                     if (is_first_step)
                     {
                         if (Compare(alpha, beta, eps) > 0)
@@ -591,7 +698,7 @@ namespace Chomp
             Semirandom
         }
 
-        public Form1(int width, int height, string strategy1, string strategy2)
+        public Form1(int width, int height, string strategy1, string strategy2, int depth1, int depth2)
         {
             InitializeComponent();
             closeButton.Visible = false;
@@ -623,7 +730,7 @@ namespace Chomp
                 Width = width,
                 Height = height
             };
-            game = new Game(board, str_1, str_2);
+            game = new Game(board, str_1, str_2, depth1, depth2);
 
             UpdateBoard();
             UpdateLabel();

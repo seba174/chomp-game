@@ -15,8 +15,10 @@ namespace Chomp
         private readonly int gamesCount;
         private readonly Strategy? strategy1 = null;
         private readonly Strategy? strategy2 = null;
+        private readonly int depth1;
+        private readonly int depth2;
 
-        public TestGames(int minWidth, int maxWidth, int minHeight, int maxHeight, int gamesCount, string str1, string str2)
+        public TestGames(int minWidth, int maxWidth, int minHeight, int maxHeight, int gamesCount, string str1, string str2, int depth1, int depth2)
         {
             InitializeComponent();
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -32,6 +34,8 @@ namespace Chomp
             this.minHeight = minHeight;
             this.maxHeight = maxHeight;
             this.gamesCount = gamesCount;
+            this.depth1 = depth1;
+            this.depth2 = depth2;
 
             if (str1 == "losowa")
             {
@@ -73,7 +77,7 @@ namespace Chomp
                         Width = width,
                         Height = height
                     };
-                    Game game = new(board, strategy1, strategy2);
+                    Game game = new(board, strategy1, strategy2, depth1, depth2);
 
                     while (!board.IsEndOfTheGame())
                     {

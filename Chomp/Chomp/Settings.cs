@@ -36,6 +36,8 @@ namespace Chomp
             int height = (int)numericUpDown2.Value;
             string str_1 = (string)strategy_demo_1.SelectedItem;
             string str_2 = (string)strategy_demo_2.SelectedItem;
+            int depth_1 = (int)numericDepthPlayer1_demo.Value;
+            int depth_2 = (int)numericDepthPlayer2_demo.Value;
 
             if (width < minDimension || height < minDimension)
             {
@@ -49,7 +51,7 @@ namespace Chomp
                 return;
             }
 
-            var game = new Form1(width, height, str_1, str_2);
+            var game = new Form1(width, height, str_1, str_2, depth_1, depth_2);
             game.Show();
         }
 
@@ -62,6 +64,8 @@ namespace Chomp
             int gamesCount = (int)gamesCountControl.Value;
             string str_1 = (string)strategy_test_1.SelectedItem;
             string str_2 = (string)strategy_test_2.SelectedItem;
+            int depth_1 = (int)numericDepthPlayer1_test.Value;
+            int depth_2 = (int)numericDepthPLayer2_test.Value;
 
             if (minWidth > maxWidth)
             {
@@ -92,7 +96,7 @@ namespace Chomp
                 MessageBox.Show($"Liczba gier powinna być z przedziału [1, {maxGames}]");
             }
 
-            var game = new TestGames(minWidth, maxWidth, minHeight, maxHeight, gamesCount, str_1, str_2);
+            var game = new TestGames(minWidth, maxWidth, minHeight, maxHeight, gamesCount, str_1, str_2, depth_1, depth_2);
             game.Show();
         }
     }
