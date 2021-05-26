@@ -60,22 +60,6 @@ namespace Chomp
                 {
                     return true;
                 }
-                //while (i < Width && i < Height)
-                //{
-                //    if (ChoosenFields.Contains((i, i)))
-                //    {
-                //        for (int j = i - 1; j >= 0; j--)
-                //        {
-                //            if (!ChoosenFields.Contains((j, i)) || !ChoosenFields.Contains((i, j)))
-                //            {
-                //                return false;
-                //            }
-
-                //        }
-                //        return true;
-                //    }
-                //    i++;
-                //}
 
                 return false;
             }
@@ -124,15 +108,6 @@ namespace Chomp
                 if (ChoosenFields.Contains((0, 2)))
                     return true;
                 return false;
-                //for (int i = 0; i < Height; i++)
-                //    if (!ChoosenFields.Contains((2, i)))
-                //    {
-                //        for (int j = 0; j < Width; j++)
-                //            if (!ChoosenFields.Contains((j, 2)))
-                //                return false;
-                //        return true;
-                //    }
-                //return true;
             }
 
             public bool IsWinning2xNBoard()
@@ -305,12 +280,10 @@ namespace Chomp
                 switch (strategy)
                 {
                     case Strategy.NN:
-                        //Make_NN_Move();
-                        await Make_NM_MoveAsync();
+                        Make_NN_Move();
                         break;
                     case Strategy.TwoN:
-                        //Make_TwoN_Move();
-                        await Make_NM_MoveAsync();
+                        Make_TwoN_Move();
                         break;
                     case Strategy.NM:
                         await Make_NM_MoveAsync();
@@ -345,11 +318,6 @@ namespace Chomp
                     else
                     {
                         Make_Random_Move();
-                        //var lastMoveOfSecondPlayer = _board.MovesList.Last();
-                        //if (_board.IsAvailableMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x))
-                        //    _board.MakeMove(lastMoveOfSecondPlayer.y, lastMoveOfSecondPlayer.x);
-                        //else
-                        //    Make_Random_Move();
                     }
                 }
             }
@@ -443,7 +411,6 @@ namespace Chomp
                 private static bool IsBadPosition(Board board)
                 {
                     return false;
-                    //return board.ChoosenFields.Count % 2 == 1;
                 }
             }
 
@@ -466,8 +433,8 @@ namespace Chomp
                 {
                     var allPossibbleMoves = board.GetAllPossibleMoves();
 
-                    double alpha = -INIT_VALUE; //double.MinValue;
-                    double beta = INIT_VALUE; //double.MaxValue;
+                    double alpha = -INIT_VALUE;
+                    double beta = INIT_VALUE;
 
                     var moves = new List<((int x, int y), double)>();
 
@@ -541,7 +508,6 @@ namespace Chomp
 
                 private static bool ShouldCut(double alpha, double beta, double eps, bool is_first_step)
                 {
-                    //return false;
                     if (is_first_step)
                     {
                         if (Compare(alpha, beta, eps) > 0)
