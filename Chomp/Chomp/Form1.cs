@@ -322,7 +322,6 @@ namespace Chomp
                 }
             }
 
-
             private async Task Make_NM_MoveAsync()
             {
                 int player_to_maximize = _board.IsMoveOfFirstPlayer() ? 1 : 2;
@@ -331,7 +330,7 @@ namespace Chomp
                     return _alphaBeta.GetBestMoves(_board, player_to_maximize);
                 });
 
-                var random = new Random();
+                var random = new Random(DateTime.Now.Millisecond);
                 int choosenMoveIndex = random.Next(0, allPossibbleMoves.Count() - 1);
                 (int x, int y) = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
 
@@ -342,7 +341,7 @@ namespace Chomp
             {
                 var allPossibbleMoves = _board.GetAllPossibleMoves();
 
-                var random = new Random();
+                var random = new Random(DateTime.Now.Millisecond);
                 int choosenMoveIndex = random.Next(0, allPossibbleMoves.Count - 1);
                 (int x, int y) = allPossibbleMoves.Skip(choosenMoveIndex).FirstOrDefault();
 
@@ -641,15 +640,15 @@ namespace Chomp
 
             private Strategy GetStrategy()
             {
-                if (_board.Width == _board.Height)
-                {
-                    return Strategy.NN;
-                }
+                //if (_board.Width == _board.Height)
+                //{
+                //    return Strategy.NN;
+                //}
 
-                if (_board.Width == 2 || _board.Height == 2)
-                {
-                    return Strategy.TwoN;
-                }
+                //if (_board.Width == 2 || _board.Height == 2)
+                //{
+                //    return Strategy.TwoN;
+                //}
 
                 return Strategy.NM;
             }
